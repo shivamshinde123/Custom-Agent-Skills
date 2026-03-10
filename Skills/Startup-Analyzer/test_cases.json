@@ -1,0 +1,42 @@
+[
+  {
+    "query": "analyze the company - Anthropic",
+    "should_trigger": true,
+    "reason": "Direct request for company analysis with explicit trigger phrase"
+  },
+  {
+    "query": "research Hugging Face for job opportunities",
+    "should_trigger": true,
+    "reason": "Startup research for job search purposes"
+  },
+  {
+    "query": "I want a complete analysis of OpenAI - team, product, everything",
+    "should_trigger": true,
+    "reason": "Explicit request for comprehensive company intelligence"
+  },
+  {
+    "query": "Tell me about Retool - their team structure, product features, and where I could help with my data science background",
+    "should_trigger": true,
+    "reason": "Request for startup intel including fit analysis for job search"
+  },
+  {
+    "query": "What is Python?",
+    "should_trigger": false,
+    "reason": "General knowledge question, not company research"
+  },
+  {
+    "query": "How do I write a cover letter?",
+    "should_trigger": false,
+    "reason": "General career advice, not specific company analysis"
+  },
+  {
+    "query": "Give me intel on Databricks - team, product, everything, and where my LLM and data engineering skills fit",
+    "should_trigger": true,
+    "reason": "Comprehensive company research for job search with skills alignment"
+  },
+  {
+    "query": "research Stripe",
+    "should_trigger": true,
+    "reason": "Company research request"
+  }
+]
