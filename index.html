@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Custom Agent Skills — a job-search toolkit for AI assistants</title>
+<meta name="description" content="Eight agent skills that teach Claude and other assistants to research startups, fetch matching jobs, and write cover letters, cold emails and LinkedIn notes.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+/* Design reference: Raycast via Refero Styles — a midnight command center with coral neon.
+   Near-black canvas, barely visible elevation, keyboard-key inset cards, glass nav, neutral light buttons,
+   coral reserved for the brand mark and a few warm accents; the hero alone gets gradient geometry. */
+:root{--void:#040506;--ink:#07080a;--obsidian:#111214;--graphite:#1b1c1e;--slate:#2f3031;--iron:#454647;--smoke:#6a6b6c;--ash:#9c9c9d;--mist:#e6e6e6;--white:#fff;
+  --coral:#ff6363;--ember:#452324;--sky:#63a1ff;--cobalt:#143ca3;--deep:#02193b;--info:#56c2ff;--green:#59d499;
+  --key:inset 0 1px 0 rgba(255,255,255,.06),inset 0 -1px 0 rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.06);
+  --mono:"JetBrains Mono",Menlo,ui-monospace,monospace}
+*{box-sizing:border-box;margin:0}
+html{color-scheme:dark}
+body{background:var(--void);color:var(--ash);font:400 16px/1.6 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--white)}
+:focus-visible{outline:2px solid var(--coral);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+kbd{font:500 12px Inter,sans-serif;color:var(--mist);background:var(--graphite);border-radius:5px;padding:2px 7px;box-shadow:var(--key)}
+
+nav.top{position:fixed;inset:12px 12px auto;z-index:20;max-width:1100px;margin:0 auto;background:rgba(17,18,20,.7);backdrop-filter:blur(16px);border-radius:14px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+nav.top .in{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 14px 0 18px}
+.logo{display:flex;align-items:center;gap:10px;color:var(--white);font-weight:600;text-decoration:none}
+.diamond{width:18px;height:18px;background:var(--coral);transform:rotate(45deg);border-radius:4px;box-shadow:0 0 16px rgba(255,99,99,.5)}
+nav.top ul{display:flex;gap:24px;list-style:none;padding:0;font-size:14px}
+nav.top ul a{color:var(--ash);text-decoration:none}nav.top ul a:hover{color:var(--white)}
+.btn{display:inline-flex;align-items:center;gap:10px;height:42px;padding:0 16px;border-radius:10px;font:500 15px Inter,sans-serif;text-decoration:none}
+.btn.light{background:var(--mist);color:var(--iron)}.btn.light:hover{background:var(--white);color:#000}
+.btn.dark{background:var(--obsidian);color:var(--white);box-shadow:var(--key)}
+.btn.small{height:34px;font-size:14px}
+
+/* hero */
+header.hero{position:relative;padding:150px 0 90px;overflow:hidden;text-align:center}
+.geo{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.geo i{position:absolute;border-radius:40%;filter:blur(2px)}
+.geo .a{width:620px;height:620px;left:-180px;top:-160px;background:conic-gradient(from 200deg,var(--deep),var(--cobalt),var(--sky),transparent 60%);opacity:.55;transform:rotate(18deg)}
+.geo .b{width:560px;height:560px;right:-170px;top:-120px;background:conic-gradient(from 20deg,#3a0d10,var(--coral),#ff9a7a,transparent 55%);opacity:.5;transform:rotate(-24deg)}
+.geo::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,var(--void) 85%)}
+.hero .wrap{position:relative}
+h1{font:600 clamp(42px,6.4vw,72px)/1.05 Inter,sans-serif;letter-spacing:-.035em;color:var(--white);max-width:15ch;margin:0 auto}
+.lede{max-width:600px;margin:22px auto 32px;font-size:18px}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* command palette */
+.palette{max-width:720px;margin:64px auto 0;text-align:left;background:rgba(7,8,10,.86);backdrop-filter:blur(20px);border-radius:16px;box-shadow:0 0 0 1px rgba(255,255,255,.1),0 30px 80px rgba(0,0,0,.7);overflow:hidden}
+.search{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--graphite);color:var(--white);font-size:17px}
+.search span{color:var(--smoke)}
+.caret{width:2px;height:20px;background:var(--coral);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.group{padding:8px}
+.group > p{font:500 12px Inter;color:var(--smoke);padding:8px 10px 6px}
+.item{display:grid;grid-template-columns:30px 1fr auto;gap:12px;align-items:center;padding:9px 10px;border-radius:9px;cursor:default}
+.item .ic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font-size:15px;box-shadow:var(--key);background:var(--graphite)}
+.item b{color:var(--white);font-weight:500;font-size:15px}
+.item small{display:block;color:var(--smoke);font-size:13px}
+.item .k{font:400 12px var(--mono);color:var(--smoke)}
+.item.on{background:var(--graphite)}
+.pfoot{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-top:1px solid var(--graphite);font-size:13px;color:var(--smoke)}
+
+section{padding:96px 0}
+.eyebrow{font:500 13px Inter;color:var(--coral)}
+h2{font:600 clamp(32px,4vw,48px)/1.1 Inter;letter-spacing:-.03em;color:var(--white);max-width:20ch;margin:12px 0 14px}
+.sub{max-width:620px}
+
+.skills{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:44px}
+.skill{background:var(--ink);border-radius:14px;padding:22px;box-shadow:var(--key);display:flex;flex-direction:column;gap:10px}
+.skill .head{display:flex;align-items:center;gap:12px}
+.skill .ic{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;font-size:19px;background:var(--graphite);box-shadow:var(--key)}
+.skill h3{color:var(--white);font:600 18px Inter}
+.skill .name{font:400 12px var(--mono);color:var(--smoke)}
+.skill p{font-size:15px}
+.skill .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:6px}
+.skill .tags span{font:400 11px var(--mono);color:var(--ash);background:var(--obsidian);padding:3px 8px;border-radius:6px}
+.skill.warm{background:var(--ember)}
+.skill.warm .ic{background:#5a2b2d}
+
+.anatomy{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.tree{background:var(--ink);border-radius:14px;box-shadow:var(--key);padding:22px;font:400 14px/1.9 var(--mono);color:var(--ash);overflow-x:auto}
+.tree b{color:var(--white);font-weight:400}.tree em{color:var(--smoke);font-style:normal}
+.flow{list-style:none;padding:0;display:grid;gap:12px;margin-top:28px}
+.flow li{display:flex;gap:14px;align-items:flex-start}
+.flow li kbd{flex:none;margin-top:2px}
+
+.end{text-align:center;padding:120px 0}
+.end h2{margin:12px auto 26px}
+footer{border-top:1px solid var(--graphite);padding:26px 0;font-size:14px;color:var(--smoke)}
+footer .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+@media(max-width:860px){.skills,.anatomy{grid-template-columns:1fr}nav.top ul{display:none}.item .k{display:none}}
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Primary"><div class="in">
+  <a class="logo" href="#"><span class="diamond" aria-hidden="true"></span>Agent Skills</a>
+  <ul><li><a href="#skills">Skills</a></li><li><a href="#anatomy">Anatomy</a></li><li><a href="#install">Install</a></li></ul>
+  <a class="btn light small" href="https://github.com/shivamshinde123/Custom-Agent-Skills">GitHub</a>
+</div></nav>
+
+<main>
+<header class="hero">
+  <div class="geo" aria-hidden="true"><i class="a"></i><i class="b"></i></div>
+  <div class="wrap">
+    <h1>A job search, packaged as agent skills.</h1>
+    <p class="lede">Eight skills that teach Claude, Cursor and other assistants to research startups, find matching roles, and write the outreach. Each one is a self-contained folder of instructions, references and scripts.</p>
+    <div class="row"><a class="btn light" href="#install">Install a skill</a><a class="btn dark" href="#skills">Browse all eight</a></div>
+
+    <div class="palette" role="group" aria-label="Command palette preview. Use the up and down arrow keys to move through skills.">
+      <div class="search"><span aria-hidden="true">⌕</span><div style="flex:1">research <b style="font-weight:400;color:var(--ash)">this startup before I apply</b></div><div class="caret" aria-hidden="true"></div></div>
+      <div class="group" id="list" tabindex="0">
+        <p>Skills</p>
+        <div class="item on"><span class="ic">🔎</span><div><b>Startup Analyzer</b><small>Team, product, funding, stack, and where you fit</small></div><span class="k">startup-analyzer</span></div>
+        <div class="item"><span class="ic">🟧</span><div><b>YC Company Analyzer</b><small>Company intel, AI/ML roles, application strategy</small></div><span class="k">yc-company-analyzer</span></div>
+        <div class="item"><span class="ic">📡</span><div><b>AI Startup Radar</b><small>Recently funded AI startups to network with</small></div><span class="k">ai-startup-radar</span></div>
+        <div class="item"><span class="ic">🧲</span><div><b>Job Fetcher</b><small>Fresh listings from 11 boards via Apify</small></div><span class="k">job-fetcher</span></div>
+      </div>
+      <div class="pfoot"><span>8 skills · Custom-Agent-Skills</span><span><kbd>↑</kbd> <kbd>↓</kbd> to move · <kbd>↵</kbd> to run</span></div>
+    </div>
+  </div>
+</header>
+
+<section id="skills"><div class="wrap">
+  <p class="eyebrow">The collection</p>
+  <h2>Research, then reach out.</h2>
+  <p class="sub">Half the skills gather intelligence. The other half turn it into words a founder or recruiter will actually read.</p>
+  <div class="skills">
+    <article class="skill"><div class="head"><span class="ic">🔎</span><div><h3>Startup Analyzer</h3><span class="name">startup-analyzer</span></div></div><p>Multi-source research on any startup: team, product, funding, tech stack, bottlenecks and hiring signals, written up as a markdown report on where your background adds value.</p><div class="tags"><span>research</span><span>report</span><span>scripts/</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">🟧</span><div><h3>YC Company Analyzer</h3><span class="name">yc-company-analyzer</span></div></div><p>Company intelligence, AI/ML job analysis (roles, skills, stack) and application strategy for Y Combinator companies and Work at a Startup.</p><div class="tags"><span>research</span><span>YC</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">📡</span><div><h3>AI Startup Radar</h3><span class="name">ai-startup-radar</span></div></div><p>Finds recently funded AI startups, small AI companies worth networking with, and the ones with open roles.</p><div class="tags"><span>discovery</span><span>funding</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">🧲</span><div><h3>Job Fetcher</h3><span class="name">job-fetcher</span></div></div><p>Pulls listings from LinkedIn, Indeed, YC, Wellfound and 7 more boards through Apify for a time window like "last 2 hours", filters them to the resume, and drafts a note to each recruiter.</p><div class="tags"><span>Apify MCP</span><span>11 boards</span></div></article>
+    <article class="skill warm"><div class="head"><span class="ic">✉️</span><div><h3>Cover Letter Generator</h3><span class="name">cover-letter-generator</span></div></div><p>A four-step workflow: find the job's pain points, write a hook, compose a letter under 250 words, then refine it with a table of every change.</p><div class="tags"><span>writing</span><span>references/</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">🚀</span><div><h3>Founder Cold Email</h3><span class="name">founder-cold-email</span></div></div><p>A cold email to a founder, CEO or other decision maker for a job, internship or research role.</p><div class="tags"><span>writing</span><span>outreach</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">🤝</span><div><h3>LinkedIn Message Generator</h3><span class="name">linkedin-message-generator</span></div></div><p>Two or three connection request notes under 300 characters each, written for a specific role and person.</p><div class="tags"><span>writing</span><span>&lt;300 chars</span></div></article>
+    <article class="skill"><div class="head"><span class="ic">🛠️</span><div><h3>Skill Creator</h3><span class="name">skill-creator</span></div></div><p>The skill for making skills: how to structure SKILL.md, what goes in references and scripts, with init, validate and package helpers.</p><div class="tags"><span>meta</span><span>init_skill.py</span><span>package_skill.py</span></div></article>
+  </div>
+</div></section>
+
+<section id="anatomy" style="background:var(--ink)"><div class="wrap anatomy">
+  <div>
+    <p class="eyebrow">Anatomy of a skill</p>
+    <h2>One folder. Loaded only when it's relevant.</h2>
+    <p class="sub">The agent reads each skill's name and description up front, then loads the full instructions only when your request matches. Big references and scripts stay out of the context until they're needed.</p>
+    <ul class="flow">
+      <li><kbd>1</kbd><span><b style="color:var(--white);font-weight:500">SKILL.md</b>: YAML front matter with a name and a trigger-rich description, then the workflow.</span></li>
+      <li><kbd>2</kbd><span><b style="color:var(--white);font-weight:500">references/</b>: templates, checklists and examples the skill can open on demand.</span></li>
+      <li><kbd>3</kbd><span><b style="color:var(--white);font-weight:500">scripts/</b>: helpers for steps that should be exact and repeatable.</span></li>
+    </ul>
+  </div>
+  <pre class="tree" aria-label="Skill folder structure"><b>cover-letter-generator/</b>
+├── <b>SKILL.md</b>
+│   <em>---</em>
+│   <em>name: cover-letter-generator</em>
+│   <em>description: Generate personalized,</em>
+│   <em>  compelling cover letters by analyzing</em>
+│   <em>  job descriptions and resumes…</em>
+│   <em>---</em>
+├── README.md
+└── <b>references/</b>
+    ├── best_practices.md
+    └── examples.md</pre>
+</div></section>
+
+<section id="install" class="end"><div class="wrap">
+  <p class="eyebrow">Install</p>
+  <h2>Copy a folder, or upload a .skill file.</h2>
+  <p class="sub" style="margin:0 auto 28px">For Claude Code, copy a skill folder into <code style="font-family:var(--mono);color:var(--mist)">~/.claude/skills/</code>. For Claude apps, upload the packaged <code style="font-family:var(--mono);color:var(--mist)">.skill</code> file. Then just ask.</p>
+  <div class="row"><a class="btn light" href="https://github.com/shivamshinde123/Custom-Agent-Skills">Get the skills</a></div>
+</div></section>
+</main>
+
+<footer><div class="wrap"><span>Built by <a href="https://github.com/shivamshinde123">Shivam Shinde</a></span><span>Works with Claude, Cursor and other skill-aware agents</span></div></footer>
+<script>
+const list=document.getElementById('list'),items=[...list.querySelectorAll('.item')];let i=0;
+list.addEventListener('keydown',e=>{
+  if(e.key!=='ArrowDown'&&e.key!=='ArrowUp')return;e.preventDefault();
+  items[i].classList.remove('on');i=(i+(e.key==='ArrowDown'?1:items.length-1))%items.length;items[i].classList.add('on');
+});
+items.forEach((it,n)=>it.addEventListener('mouseenter',()=>{items[i].classList.remove('on');i=n;it.classList.add('on')}));
+</script>
+</body>
+</html>
